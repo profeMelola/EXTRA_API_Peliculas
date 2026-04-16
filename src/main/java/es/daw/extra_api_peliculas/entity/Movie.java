@@ -1,11 +1,25 @@
 package es.daw.extra_api_peliculas.entity;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 
+import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Entidad que representa una película. LADO INVERSO DE LA RELACIÓN MANY2MANY
+ *
+ * Relación con MovieCast:
+ *   - Una película puede tener varios roles (cast): @OneToMany
+ *   - mappedBy = "id.movie" apunta al campo "movie" dentro de la PK compuesta MovieCastId
+ *   - cascade ALL + orphanRemoval: si se elimina un MovieCast de la colección,
+ *     se borra su fila en movie_cast (Prueba 8)
+ */
 @Entity
 @Table(name = "movies")
+@Getter
+@Setter
 public class Movie {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -23,6 +37,15 @@ public class Movie {
     @Column(nullable = false)
     private boolean active = true;
 
+    /**
+     * Colección de roles asociados a esta película.
+     *
+     * - CASCADE: El ciclo de vida del rol lo gestiona Movie, no Actor
+     * - Se inicializa como HashSet para evitar NullPointerException al añadir roles.
+     * - orphanRemoval = true: al eliminar un MovieCast de este Set y hacer flush,
+     *      Hibernate borra la fila en movie_cast sin tocar actors ni movies.
+     *      Al hacer delete en el repositorio solo se borra la fila de movie_cast, nunca el actor ni la película
+     */
     // combinación de cascde all + orpahnRemoval: si se elimina un MovieCast de la colección
     // se borrar su fila en movie_cast (Prueba 8)
     // Si se elimina una película se borran los MovieCast con id de dicha película
@@ -30,7 +53,7 @@ public class Movie {
     @OneToMany(mappedBy = "movie",
                 cascade = CascadeType.ALL,
                 orphanRemoval = true)
-    private Set<MovieCast> movieCast;
+    private Set<MovieCast> movieCast = new HashSet<>();
 
     // ---------- el helpers bidireccionales ------------
     public void addMovieCast(MovieCast movieCast){
