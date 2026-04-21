@@ -147,5 +147,62 @@ public class MovieCastService {
         );
     }
 
+    @Transactional
+    public void deleteMovie(Long movieId, Long actorId) {
+
+    }
+
+    // lectura
+    @Transactional(readOnly = true)
+    public MovieCastResponseDto getMovieCast(Long movieId, Long actorId) {
+
+        // Necesito la PK. Es compuesta!!!!
+        MovieCastId id = new MovieCastId(movieId, actorId);
+
+        MovieCast movieCast = movieCastRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "MovieCast no encontrado para movieId: " + movieId + " actorId: " + actorId));
+
+        Movie movie = movieCast.getMovie();
+        Actor actor = movieCast.getActor();
+
+        return new MovieCastResponseDto(
+                movie.getId(),
+                movie.getTitle(),
+                movie.getReleaseYear(),
+                movie.getGenre(),
+                movie.isActive(),
+                actor.getId(),
+                actor.getStageName()
+        );
+    }
+
+    // ---------------------------
+    // PENDIENTE MEJORA!!!! HACER SERVICIO PARA MOVIE Y HACER SERVICIO PARA ACTOR. INDEPENDIENTES!!!!
+    // Nuevo: borrar película (debe borrar MovieCast por cascade configurado en Movie)
+    @Transactional
+    public void deleteMovie(Long movieId) {
+        Movie movie = movieRepository.findById(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Película no encontrada con id: " + movieId));
+        movieRepository.delete(movie);
+    }
+
+
+    @Transactional
+    public void deleteActor(Long actorId) {
+
+        Actor actor = actorRepository.findById(actorId)
+                .orElseThrow(() -> new ResourceNotFoundException("Actor no encontrado con id: " + actorId));
+
+        // Si el actor tiene MovieCast (participa en en alguna película -> lanzar ConflictException)
+        boolean hashCast = actor.getMovieCast() != null && !actor.getMovieCast().isEmpty();
+        if (hashCast) {
+            throw new ConflictException("El actor con id "+actorId+" participa en películas y no se puede borrar");
+        }
+
+        actorRepository.delete(actor);
+    }
+    // ---------------------------
+
 }
 

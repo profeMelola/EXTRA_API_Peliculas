@@ -95,14 +95,30 @@ public class MovieController {
 
     // ------------------
 
-    // PENDIENTE!!!
     // GET http://localhost:8080/movie/2/cast/1
+    @GetMapping("/{movieId}/cast/{actorId}")
+    public ResponseEntity<MovieCastResponseDto> getMovieCast(
+            @PathVariable Long movieId,
+            @PathVariable Long actorId) {
 
-    // PENDIENTE!!!
+        MovieCastResponseDto dto = movieCastService.getMovieCast(movieId, actorId);
+        return ResponseEntity.ok(dto);
+    }
+
+
     // PROBAR ENDPOINTS QUE BORRAN MOVIE Y ACTOR... verificar en BD la configuración de CASCADE en los entities.
     // Comprobar vía java que al borrar un actor, si participa en una película NO BORRARLO!!!
     // No usar CASCADE en Actor, sino impedir vía java que no se borre...
+    // Nuevo endpoint: borrar película (debe eliminar también MovieCast asociadas por cascade)
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
+        movieCastService.deleteMovie(id);
+        return ResponseEntity.noContent().build();
+    }
 
+    // PENDIENTE!!!!!
+    // obtener todas las películas con su casting completo
+    // https://github.com/profeMelola/DWES-REFUERZO-EXTRAORDINARIA/tree/main/SPRING/Peliculas#ampliaci%C3%B3n--obtener-todas-las-pel%C3%ADculas-con-su-casting-completo
 
 }
 
